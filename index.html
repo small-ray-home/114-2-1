@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>青埔國中 114 學年度七年級第一次段考 - 即時儀表板</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Noto+Sans+TC:wght@100..900&display=swap');
+        
+        body {
+            font-family: 'Inter', 'Noto Sans TC', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            background-color: #a4c9e4;
+            background-image: radial-gradient(#d3e6f5 1px, transparent 1px), radial-gradient(#d3e6f5 1px, transparent 1px);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+            overflow: hidden; /* 防止全螢幕時出現捲軸 */
+            
+            /* 自動縮放 */
+            zoom: 95%;
+            -moz-transform: scale(0.95);
+            -moz-transform-origin: top center;
+        }
+
+        .dashboard-container {
+            max-width: 1100px;
+            width: 100%;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .exam-table { table-layout: fixed; }
+        .exam-table th, .exam-table td {
+            padding: 16px 20px; 
+            font-size: 1.3rem; 
+            line-height: 1.6;
+            vertical-align: middle;
+            text-align: center;
+        }
+        .exam-table thead th {
+            font-size: 1.1rem;
+            background-color: #f0f7ff;
+            color: #4b5563;
+        }
+        
+        .exam-table td:first-child, .exam-table th:first-child {
+            text-align: left;
+            width: 20%;
+        }
+
+        .subject-name { font-weight: 800; }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-container">
+        <header class="text-center mb-6">
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-blue-900">
+                青埔國中 114 學年度七年級第一次段考
+            </h1>
+        </header>
+
+        <div class="flex flex-col lg:flex-row gap-6 mb-6">
+            <div class="card lg:w-1/2 flex flex-col items-center justify-center text-center">
+                <h2 class="text-xl font-bold text-gray-800 mb-2">⏱️ 當前日期與時間</h2>
+                <div id="current-date" class="text-2xl font-semibold text-gray-700 mb-2"></div>
+                <div id="current-time" class="text-5xl sm:text-7xl font-extrabold text-blue-600"></div>
+            </div>
+
+            <div class="card lg:w-1/2 flex flex-col items-center justify-center p-6">
+                <p class="text-xl font-semibold text-gray-500 mb-3">📝 現在科目與活動狀態</p>
+                <div id="current-subject-output" class="text-2xl sm:text-4xl font-bold text-blue-700 text-center min-h-[3rem]">
+                    載入中...
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-4 text-center border-b pb-2">📅 考程分配表</h2>
+            
+            <div class="flex justify-center space-x-4 mb-6">
+                <button id="btn-day1" onclick="switchDay('Day1')" class="px-8 py-3 rounded-full font-bold transition-all bg-blue-600 text-white shadow-lg">
+                    04/01（三）
+                </button>
+                <button id="btn-day2" onclick="switchDay('Day2')" class="px-8 py-3 rounded-full font-bold transition-all bg-gray-200 text-gray-700">
+                    04/02（四）
+                </button>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="exam-table min-w-full divide-y divide-gray-200 border">
+                    <thead>
+                        <tr>
+                            <th style="width: 20%">節次</th>
+                            <th style="width: 35%" class="text-center">時間</th>
+                            <th id="exam-day-header" style="width: 45%" class="text-center">04/01（三）科目</th>
+                        </tr>
+                    </thead>
+                    <tbody id="schedule-table-body" class="bg-white divide-y divide-gray-200">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. PWA 註冊 ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js');
+            });
+        }
+
+        // --- 2. 點擊自動觸發全螢幕 (備用方案) ---
+        document.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            }
+        }, { once: true });
+
+        // --- 3. 儀表板邏輯 ---
+        const DAY1_DATE = "2026/04/01";
+        const DAY2_DATE = "2026/04/02";
+
+        const SCHEDULE_DATA = [
+            { session: '第一節', time: '08:30–09:15', day1: { name: '自習', isExam: false }, day2: { name: '自習', isExam: false } },
+            { session: '第二節', time: '09:25–10:10', day1: { name: '國文', isExam: true }, day2: { name: '英文(含聽力)', isExam: true } },
+            { session: '第三節', time: '10:20–11:05', day1: { name: '自習', isExam: false }, day2: { name: '自習', isExam: false } },
+            { session: '第四節', time: '11:15–12:00', day1: { name: '生物', isExam: true }, day2: { name: '數學', isExam: true } },
+            { session: '午休',   time: '12:00–13:15', day1: { name: '午休及午餐', isExam: false }, day2: { name: '午休及午餐', isExam: false } },
+            { session: '第五節', time: '13:15–13:55', day1: { name: '自習', isExam: false }, day2: { name: '班際體育競賽', isExam: false } },
+            { session: '第六節', time: '14:05–14:55', day1: { name: '寫作測驗', isExam: true }, day2: { name: '班際體育競賽', isExam: false } },
+            { session: '第七節', time: '15:05–15:50', day1: { name: '社會', isExam: true }, day2: { name: '班際體育競賽', isExam: false } },
+        ];
+
+        let currentView = 'Day1';
+
+        function switchDay(day) {
+            currentView = day;
+            const isDay1 = (day === 'Day1');
+            document.getElementById('btn-day1').className = isDay1 ? 'px-8 py-3 rounded-full font-bold bg-blue-600 text-white shadow-lg' : 'px-8 py-3 rounded-full font-bold bg-gray-200 text-gray-700';
+            document.getElementById('btn-day2').className = !isDay1 ? 'px-8 py-3 rounded-full font-bold bg-blue-600 text-white shadow-lg' : 'px-8 py-3 rounded-full font-bold bg-gray-200 text-gray-700';
+            document.getElementById('exam-day-header').textContent = isDay1 ? '04/01（三）科目' : '04/02（四）科目';
+            renderTable();
+        }
+
+        function renderTable() {
+            const body = document.getElementById('schedule-table-body');
+            body.innerHTML = '';
+            const now = new Date();
+            const nowMin = now.getHours() * 60 + now.getMinutes();
+
+            SCHEDULE_DATA.forEach(item => {
+                const row = document.createElement('tr');
+                const [startStr, endStr] = item.time.split('–');
+                const startMin = parseInt(startStr.split(':')[0]) * 60 + parseInt(startStr.split(':')[1]);
+                const endMin = parseInt(endStr.split(':')[0]) * 60 + parseInt(endStr.split(':')[1]);
+                const isCurrent = (nowMin >= startMin && nowMin < endMin);
+                
+                if (isCurrent) row.className = 'bg-yellow-100 ring-2 ring-yellow-400 ring-inset font-bold';
+                
+                const dayData = (currentView === 'Day1') ? item.day1 : item.day2;
+                const subjectColor = dayData.isExam ? 'text-red-600' : 'text-green-600';
+
+                row.innerHTML = `
+                    <td class="font-bold text-gray-700">${item.session}</td>
+                    <td class="text-gray-500 text-center">${item.time}</td>
+                    <td class="text-center">
+                        <span class="subject-name ${subjectColor}">${dayData.name}</span>
+                    </td>
+                `;
+                body.appendChild(row);
+            });
+        }
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('current-date').textContent = now.toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'long' });
+            document.getElementById('current-time').textContent = now.toLocaleTimeString('zh-TW', { hour12: false });
+            
+            const nowMin = now.getHours() * 60 + now.getMinutes();
+            let statusText = "今日考程尚未開始";
+            let statusClass = "text-gray-500";
+
+            SCHEDULE_DATA.forEach(item => {
+                const [startStr, endStr] = item.time.split('–');
+                const startMin = parseInt(startStr.split(':')[0]) * 60 + parseInt(startStr.split(':')[1]);
+                const endMin = parseInt(endStr.split(':')[0]) * 60 + parseInt(endStr.split(':')[1]);
+                const dayData = (currentView === 'Day1') ? item.day1 : item.day2;
+
+                if (nowMin >= startMin && nowMin < endMin) {
+                    statusText = `正在進行：${dayData.name}`;
+                    statusClass = dayData.isExam ? "text-red-600 animate-pulse" : "text-blue-700";
+                }
+            });
+
+            document.getElementById('current-subject-output').textContent = statusText;
+            document.getElementById('current-subject-output').className = `text-2xl sm:text-4xl font-bold ${statusClass} text-center min-h-[3rem]`;
+        }
+
+        setInterval(updateClock, 1000);
+        window.onload = () => {
+            const today = new Date().toLocaleDateString('zh-TW', {year:'numeric', month:'2-digit', day:'2-digit'}).replace(/\//g, '/');
+            if (today === DAY2_DATE) switchDay('Day2');
+            else switchDay('Day1');
+            updateClock();
+        };
+    </script>
+</body>
+</html>
