@@ -8,7 +8,6 @@
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="icon-192.png">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -25,9 +24,10 @@
             background-image: radial-gradient(#d3e6f5 1px, transparent 1px), radial-gradient(#d3e6f5 1px, transparent 1px);
             background-size: 20px 20px;
             background-position: 0 0, 10px 10px;
-            zoom: 93%;
-            -moz-transform: scale(0.93);
+            zoom: 95%;
+            -moz-transform: scale(0.95);
             -moz-transform-origin: top center;
+            overflow: hidden;
         }
 
         .dashboard-container { max-width: 1100px; width: 100%; }
@@ -38,9 +38,34 @@
         .subject-name { font-weight: 800; }
         
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+        /* 全螢幕覆蓋層 */
+        #fullscreen-overlay {
+            position: fixed;
+            top: 0; left: 0; 
+            width: 100vw; height: 100vh;
+            background: #1e293b;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 99999;
+            cursor: pointer;
+        }
     </style>
 </head>
-<body>
+<body onclick="handleGlobalClick(event)">
+
+    <div id="fullscreen-overlay">
+        <h2 id="overlay-text" class="text-3xl font-bold mb-8 text-center px-4 leading-relaxed">
+            請點擊空白處進入全螢幕模式
+        </h2>
+        <button id="overlay-confirm-btn" onclick="hideOverlay(event)" 
+                class="hidden px-12 py-4 bg-blue-500 text-white rounded-full font-black text-2xl hover:bg-blue-600 transition-all shadow-xl">
+            確 定
+        </button>
+    </div>
 
     <div class="dashboard-container">
         <header class="text-center mb-6">
@@ -77,11 +102,9 @@
             </div>
         </div>
 
-        <div class="card mb-6 flex flex-col items-center justify-center p-6">
+        <div class="card mb-6 flex flex-col items-center justify-center p-6 text-center">
             <p class="text-xl font-semibold text-gray-500 mb-3">📝 現在科目與活動狀態</p>
-            <div id="current-subject-output" class="text-2xl sm:text-4xl font-bold text-center min-h-[3rem]">
-                載入中...
-            </div>
+            <div id="current-subject-output" class="text-2xl sm:text-4xl font-bold min-h-[3rem]">載入中...</div>
         </div>
         
         <div class="card">
@@ -89,15 +112,10 @@
                 <button id="btn-day1" onclick="switchDay('Day1')" class="px-8 py-3 rounded-full font-bold transition-all bg-blue-600 text-white shadow-lg">04/01（三）</button>
                 <button id="btn-day2" onclick="switchDay('Day2')" class="px-8 py-3 rounded-full font-bold transition-all bg-gray-200 text-gray-700">04/02（四）</button>
             </div>
-
             <div class="overflow-x-auto">
                 <table class="exam-table min-w-full divide-y divide-gray-200 border">
                     <thead>
-                        <tr>
-                            <th style="width: 20%">節次</th>
-                            <th style="width: 35%">時間</th>
-                            <th id="exam-day-header" style="width: 45%">科目</th>
-                        </tr>
+                        <tr><th style="width: 20%">節次</th><th style="width: 35%">時間</th><th id="exam-day-header" style="width: 45%">科目</th></tr>
                     </thead>
                     <tbody id="schedule-table-body" class="bg-white divide-y divide-gray-200"></tbody>
                 </table>
@@ -106,34 +124,49 @@
     </div>
 
     <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js'); });
-        }
-
-        document.addEventListener('click', (e) => {
-            if (e.target.tagName !== 'INPUT' && !document.fullscreenElement) {
+        // --- 全螢幕與重新整理邏輯 ---
+        function handleGlobalClick(e) {
+            // 只有在非全螢幕且點擊遮罩時啟動全螢幕
+            if (!document.fullscreenElement && (e.target.id === "fullscreen-overlay" || e.target.id === "overlay-text")) {
                 document.documentElement.requestFullscreen().catch(() => {});
             }
-        }, { once: true });
+        }
 
+        document.addEventListener('fullscreenchange', () => {
+            const overlay = document.getElementById('fullscreen-overlay');
+            const text = document.getElementById('overlay-text');
+            const btn = document.getElementById('overlay-confirm-btn');
+
+            if (document.fullscreenElement) {
+                // 進入全螢幕：顯示 ESC 提示與確定按鈕
+                text.innerText = "已進入全螢幕模式\n按 ESC 鍵可退出並鎖定";
+                btn.classList.remove('hidden');
+                overlay.style.cursor = "default";
+            } else {
+                // 退出全螢幕：立刻重新整理頁面
+                window.location.reload(); 
+            }
+        });
+
+        function hideOverlay(e) {
+            e.stopPropagation(); 
+            document.getElementById('fullscreen-overlay').classList.add('hidden');
+        }
+
+        // --- 核心考程與日期邏輯 ---
         function updateAttendance() {
             const totalInput = document.getElementById('total-students');
             const presentInput = document.getElementById('present-students');
             let total = parseInt(totalInput.value) || 0;
             let present = parseInt(presentInput.value) || 0;
-
-            if (total < 0) { total = 0; totalInput.value = 0; }
-            if (present < 0) { present = 0; presentInput.value = 0; }
-            if (present > total) { present = total; presentInput.value = total; }
-
-            const absent = total - present;
-            document.getElementById('absent-students').textContent = absent;
+            if (total < 0) total = 0; totalInput.value = total;
+            if (present < 0) present = 0;
+            if (present > total) present = total; presentInput.value = present;
+            document.getElementById('absent-students').textContent = total - present;
         }
 
-        // --- 核心日期邏輯 ---
         const DAY1_DATE_STR = "2026/04/01";
         const DAY2_DATE_STR = "2026/04/02";
-        
         const SCHEDULE_DATA = [
             { session: '第一節', time: '08:30–09:15', day1: { name: '自習', isExam: false }, day2: { name: '自習', isExam: false } },
             { session: '第二節', time: '09:25–10:10', day1: { name: '國文', isExam: true }, day2: { name: '英文(含聽力)', isExam: true } },
@@ -146,7 +179,6 @@
         ];
 
         let currentView = 'Day1';
-
         function switchDay(day) {
             currentView = day;
             const isDay1 = (day === 'Day1');
@@ -168,13 +200,8 @@
                 const [startStr, endStr] = item.time.split('–');
                 const startMin = parseInt(startStr.split(':')[0]) * 60 + parseInt(startStr.split(':')[1]);
                 const endMin = parseInt(endStr.split(':')[0]) * 60 + parseInt(endStr.split(':')[1]);
-                
-                // 只有日期與視圖一致且在時間內才標黃
                 const isCorrectDay = (todayStr === DAY1_DATE_STR && currentView === 'Day1') || (todayStr === DAY2_DATE_STR && currentView === 'Day2');
-                if (isCorrectDay && nowMin >= startMin && nowMin < endMin) {
-                    row.className = 'bg-yellow-100 ring-2 ring-yellow-400 ring-inset font-bold';
-                }
-                
+                if (isCorrectDay && nowMin >= startMin && nowMin < endMin) row.className = 'bg-yellow-100 ring-2 ring-yellow-400 ring-inset font-bold';
                 const dayData = (currentView === 'Day1') ? item.day1 : item.day2;
                 const subjectColor = dayData.isExam ? 'text-red-600' : 'text-green-600';
                 row.innerHTML = `<td>${item.session}</td><td>${item.time}</td><td><span class="subject-name ${subjectColor}">${dayData.name}</span></td>`;
@@ -188,16 +215,11 @@
             document.getElementById('current-date').textContent = now.toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'long' });
             document.getElementById('current-time').textContent = now.toLocaleTimeString('zh-TW', { hour12: false });
             
-            const nowMin = now.getHours() * 60 + now.getMinutes();
-            let statusText = "";
+            let statusText = (todayStr !== DAY1_DATE_STR && todayStr !== DAY2_DATE_STR) ? "📅 目前非段考日期" : "今日考程尚未開始";
             let statusClass = "text-gray-500";
 
-            // 檢查是否為考試日期
-            if (todayStr !== DAY1_DATE_STR && todayStr !== DAY2_DATE_STR) {
-                statusText = "📅 目前非段考日期";
-                statusClass = "text-gray-400";
-            } else {
-                statusText = "今日考程尚未開始";
+            if (todayStr === DAY1_DATE_STR || todayStr === DAY2_DATE_STR) {
+                const nowMin = now.getHours() * 60 + now.getMinutes();
                 SCHEDULE_DATA.forEach(item => {
                     const [startStr, endStr] = item.time.split('–');
                     const startMin = parseInt(startStr.split(':')[0]) * 60 + parseInt(startStr.split(':')[1]);
@@ -211,22 +233,15 @@
             }
             const output = document.getElementById('current-subject-output');
             output.textContent = statusText;
-            output.className = `text-2xl sm:text-4xl font-bold ${statusClass} text-center min-h-[3rem]`;
+            output.className = `text-2xl sm:text-4xl font-bold ${statusClass}`;
         }
 
         setInterval(updateClock, 1000);
         window.onload = () => {
             const now = new Date();
             const todayStr = now.toLocaleDateString('zh-TW', {year:'numeric', month:'2-digit', day:'2-digit'}).replace(/\//g, '/');
-            
-            // 自動切換日期
-            if (todayStr === DAY2_DATE_STR) {
-                switchDay('Day2');
-            } else {
-                switchDay('Day1'); // 非考試日或 Day1 皆預設顯示 Day1
-            }
-            updateClock();
-            updateAttendance();
+            if (todayStr === DAY2_DATE_STR) switchDay('Day2'); else switchDay('Day1');
+            updateClock(); updateAttendance();
         };
     </script>
 </body>
