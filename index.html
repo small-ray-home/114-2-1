@@ -28,38 +28,46 @@
             overflow: hidden; /* 預設禁止滾動 */
         }
 
-        /* --- 1920*1080 固定解析度遮罩邏輯 --- */
+        /* --- 徹底修正：固定比例全畫面覆蓋邏輯 --- */
         #fullscreen-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            background-color: #020617; /* 最深色背景 */
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            background-color: #020617; /* 最深色背景，完全遮蓋 */
+            display: grid; /* 使用 Grid 保證置中穩定 */
+            place-items: center;
             z-index: 99999;
             cursor: pointer;
             overflow: hidden;
         }
 
-        /* 固定 16:9 的內容區域 */
+        /* 固定 1920*1080 的內容區域 */
         #overlay-content-area {
+            position: absolute; /* 強制絕對定位 */
             width: 1920px;
             height: 1080px;
-            background-color: #0f172a; /* 內容區域的深色背景 */
+            background-color: #0f172a; /* 內容區域背景 */
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            border: 2px solid #1e293b; /* 可選：加個邊框區分 1920 區域 */
+            border: 2px solid #1e293b; 
             box-shadow: 0 0 100px rgba(0,0,0,0.8);
             
-            /* RWD 防呆：當螢幕小於 1920*1080 時自動縮放 */
+            /* 【修復】強制內容文字為白色 */
+            color: white; 
+            
+            /* 【修復 RWD】強制維持 16:9 比例並縮放，不讓內容露出 */
             max-width: 100vw;
             max-height: 100vh;
             aspect-ratio: 1920 / 1080;
+            
+            /* 配合 Grid 的置中 */
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
         }
 
         .dashboard-container { max-width: 1100px; width: 100%; }
@@ -159,7 +167,7 @@
             const btn = document.getElementById('overlay-confirm-btn');
 
             if (document.fullscreenElement) {
-                // 進入全螢幕後：更換文字，顯現確定按鈕
+                // 已進入全螢幕模式，【修復】確認文字依然是白色
                 text.innerHTML = "已進入全螢幕模式<br><span class='text-4xl text-gray-400 mt-10 block'>按 ESC 鍵可退出並重新鎖定</span>";
                 btn.classList.remove('hidden');
                 overlay.style.cursor = "default";
@@ -170,11 +178,10 @@
         });
 
         function hideOverlay(event) {
-            // 重要：阻止點擊事件冒泡到父層 overlay 再次觸發 requestFullScreen
             event.stopPropagation(); 
             const overlay = document.getElementById('fullscreen-overlay');
-            overlay.style.display = 'none'; // 直接隱藏
-            document.getElementById('body-tag').style.overflow = 'auto'; // 允許滾動內容
+            overlay.style.display = 'none'; 
+            document.getElementById('body-tag').style.overflow = 'auto'; 
         }
 
         // --- 其餘考程與計時邏輯保持不變 ---
@@ -225,11 +232,7 @@
                 const startMin = parseInt(startStr.split(':')[0]) * 60 + parseInt(startStr.split(':')[1]);
                 const endMin = parseInt(endStr.split(':')[0]) * 60 + parseInt(endStr.split(':')[1]);
                 const isCorrectDay = (todayStr === DAY1_DATE_STR && currentView === 'Day1') || (todayStr === DAY2_DATE_STR && currentView === 'Day2');
-                
-                if (isCorrectDay && nowMin >= startMin && nowMin < endMin) {
-                    row.className = 'bg-yellow-100 ring-2 ring-yellow-400 ring-inset font-bold';
-                }
-                
+                if (isCorrectDay && nowMin >= startMin && nowMin < endMin) row.className = 'bg-yellow-100 ring-2 ring-yellow-400 ring-inset font-bold';
                 const dayData = (currentView === 'Day1') ? item.day1 : item.day2;
                 const subjectColor = dayData.isExam ? 'text-red-600' : 'text-green-600';
                 row.innerHTML = `<td>${item.session}</td><td>${item.time}</td><td><span class="subject-name ${subjectColor}">${dayData.name}</span></td>`;
@@ -242,10 +245,8 @@
             const todayStr = now.toLocaleDateString('zh-TW', {year:'numeric', month:'2-digit', day:'2-digit'}).replace(/\//g, '/');
             document.getElementById('current-date').textContent = now.toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'long' });
             document.getElementById('current-time').textContent = now.toLocaleTimeString('zh-TW', { hour12: false });
-            
             let statusText = (todayStr !== DAY1_DATE_STR && todayStr !== DAY2_DATE_STR) ? "📅 目前非段考日期" : "今日考程尚未開始";
             let statusClass = "text-gray-500";
-
             if (todayStr === DAY1_DATE_STR || todayStr === DAY2_DATE_STR) {
                 const nowMin = now.getHours() * 60 + now.getMinutes();
                 SCHEDULE_DATA.forEach(item => {
@@ -253,10 +254,7 @@
                     const startMin = parseInt(startStr.split(':')[0]) * 60 + parseInt(startStr.split(':')[1]);
                     const endMin = parseInt(endStr.split(':')[0]) * 60 + parseInt(endStr.split(':')[1]);
                     const dayData = (todayStr === DAY1_DATE_STR) ? item.day1 : item.day2;
-                    if (nowMin >= startMin && nowMin < endMin) {
-                        statusText = `正在進行：${dayData.name}`;
-                        statusClass = dayData.isExam ? "text-red-600 animate-pulse" : "text-blue-700";
-                    }
+                    if (nowMin >= startMin && nowMin < endMin) { statusText = `正在進行：${dayData.name}`; statusClass = dayData.isExam ? "text-red-600 animate-pulse" : "text-blue-700"; }
                 });
             }
             const output = document.getElementById('current-subject-output');
@@ -269,8 +267,7 @@
             const now = new Date();
             const todayStr = now.toLocaleDateString('zh-TW', {year:'numeric', month:'2-digit', day:'2-digit'}).replace(/\//g, '/');
             if (todayStr === DAY2_DATE_STR) switchDay('Day2'); else switchDay('Day1');
-            updateClock(); 
-            updateAttendance();
+            updateClock(); updateAttendance();
         };
     </script>
 </body>
