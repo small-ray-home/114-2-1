@@ -11,58 +11,51 @@
         
         body {
             font-family: 'Inter', 'Noto Sans TC', sans-serif;
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
+            margin: 0; padding: 0; min-height: 100vh;
             background-color: #a4c9e4;
+            background-image: radial-gradient(#d3e6f5 1px, transparent 1px), radial-gradient(#d3e6f5 1px, transparent 1px);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
             overflow: hidden; /* 預設禁止滾動 */
         }
 
-        /* --- 終極置中遮罩層 --- */
+        /* --- 終極 1920x1080 置中遮罩層 --- */
         #fullscreen-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: #020617; /* 底部背景 */
-            display: flex;         /* 使用 Flex */
-            justify-content: center; /* 水平置中 */
-            align-items: center;     /* 垂直置中 */
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background-color: #020617; /* 全螢幕底色 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
             z-index: 99999;
             cursor: pointer;
         }
 
-        /* 1920x1080 內容區域 */
         #overlay-content-area {
-            width: 1920px;
-            height: 1080px;
-            background-color: #020617; /* 內容背景 */
+            width: 1920px; height: 1080px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            color: white; /* 確保文字是白色 */
-            
-            /* 關鍵：如果螢幕太小，縮放而不跑版 */
-            max-width: 100%;
-            max-height: 100%;
-            box-sizing: border-box;
+            color: #ffffff !important; /* 強制白色 */
+            max-width: 100%; max-height: 100%;
         }
 
-        /* 文字樣式：強制白色並加大 */
         #overlay-text {
             color: #ffffff !important;
             font-size: 5rem;
             font-weight: 900;
             text-align: center;
-            line-height: 1.2;
-            margin-bottom: 3rem;
+            line-height: 1.3;
+            margin-bottom: 4rem;
         }
 
-        .dashboard-container { max-width: 1100px; margin: 2rem auto; width: 93%; }
+        .dashboard-container { max-width: 1100px; margin: 2rem auto; width: 95%; zoom: 93%; }
         .card { background-color: white; border-radius: 1.5rem; padding: 1.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
-        .exam-table th, .exam-table td { padding: 16px; text-align: center; border-bottom: 1px solid #eee; }
+        .exam-table th, .exam-table td { padding: 16px 20px; font-size: 1.3rem; text-align: center; border-bottom: 1px solid #f0f0f0; }
+        .subject-name { font-weight: 800; }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
 </head>
 <body id="body-tag">
@@ -71,7 +64,7 @@
         <div id="overlay-content-area">
             <h2 id="overlay-text">請點擊畫面進入全螢幕模式</h2>
             <button id="overlay-confirm-btn" onclick="hideOverlay(event)" 
-                    class="hidden px-20 py-8 bg-blue-600 text-white rounded-full font-black text-4xl hover:bg-blue-700 shadow-2xl transition-transform active:scale-95">
+                    class="hidden px-24 py-8 bg-blue-600 text-white rounded-full font-black text-4xl hover:bg-blue-700 shadow-2xl transition-transform active:scale-95">
                 確 定
             </button>
         </div>
@@ -79,48 +72,66 @@
 
     <div class="dashboard-container">
         <header class="text-center mb-6">
-            <h1 class="text-3xl font-extrabold text-blue-900">青埔國中 114 學年度七年級第一次段考</h1>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-blue-900">
+                青埔國中 114 學年度七年級第一次段考
+            </h1>
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <div class="card flex flex-col items-center justify-center text-center">
                 <h2 class="text-xl font-bold text-gray-800 mb-2">⏱️ 當前日期與時間</h2>
                 <div id="current-date" class="text-2xl font-semibold text-gray-700 mb-2"></div>
-                <div id="current-time" class="text-6xl font-extrabold text-blue-600"></div>
+                <div id="current-time" class="text-5xl sm:text-6xl font-extrabold text-blue-600"></div>
             </div>
 
-            <div class="card">
+            <div class="card flex flex-col justify-center">
                 <h2 class="text-xl font-bold text-gray-800 mb-4 text-center">👥 考場人數統計</h2>
                 <div class="grid grid-cols-3 gap-4 text-center">
-                    <div><p class="text-gray-500 font-bold mb-1">應到</p><input type="number" id="total-students" value="30" oninput="updateAttendance()" class="w-full text-3xl font-black text-center border-b-2 outline-none"></div>
-                    <div><p class="text-gray-500 font-bold mb-1">實到</p><input type="number" id="present-students" value="30" oninput="updateAttendance()" class="w-full text-3xl font-black text-center text-green-600 border-b-2 outline-none"></div>
-                    <div><p class="text-gray-500 font-bold mb-1">缺席</p><div id="absent-students" class="text-3xl font-black text-red-600">0</div></div>
+                    <div>
+                        <p class="text-gray-500 font-bold mb-1">應到</p>
+                        <input type="number" id="total-students" value="30" min="0" oninput="updateAttendance()" 
+                               class="w-full text-3xl font-black text-center border-b-2 border-gray-200 focus:border-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <p class="text-gray-500 font-bold mb-1">實到</p>
+                        <input type="number" id="present-students" value="30" min="0" oninput="updateAttendance()" 
+                               class="w-full text-3xl font-black text-center text-green-600 border-b-2 border-gray-200 focus:border-green-500 outline-none">
+                    </div>
+                    <div>
+                        <p class="text-gray-500 font-bold mb-1">缺席</p>
+                        <div id="absent-students" class="text-3xl font-black text-red-600">0</div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="card mb-6 text-center p-8">
-            <p class="text-xl font-semibold text-gray-500 mb-2">📝 現在科目與活動狀態</p>
-            <div id="current-subject-output" class="text-4xl font-bold">載入中...</div>
+        <div class="card mb-6 flex flex-col items-center justify-center p-6 text-center">
+            <p class="text-xl font-semibold text-gray-500 mb-3">📝 現在科目與活動狀態</p>
+            <div id="current-subject-output" class="text-2xl sm:text-4xl font-bold min-h-[3rem]">載入中...</div>
         </div>
-
+        
         <div class="card">
             <div class="flex justify-center space-x-4 mb-6">
-                <button id="btn-day1" onclick="switchDay('Day1')" class="px-8 py-3 rounded-full font-bold bg-blue-600 text-white">04/01（三）</button>
-                <button id="btn-day2" onclick="switchDay('Day2')" class="px-8 py-3 rounded-full font-bold bg-gray-200 text-gray-700">04/02（四）</button>
+                <button id="btn-day1" onclick="switchDay('Day1')" class="px-8 py-3 rounded-full font-bold transition-all bg-blue-600 text-white shadow-lg">04/01（三）</button>
+                <button id="btn-day2" onclick="switchDay('Day2')" class="px-8 py-3 rounded-full font-bold transition-all bg-gray-200 text-gray-700">04/02（四）</button>
             </div>
             <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead class="bg-gray-50">
-                        <tr><th class="w-1/4">節次</th><th class="w-1/3">時間</th><th id="exam-day-header">科目</th></tr>
+                <table class="w-full exam-table">
+                    <thead>
+                        <tr class="bg-gray-50">
+                            <th class="w-1/4">節次</th>
+                            <th class="w-1/3">時間</th>
+                            <th id="exam-day-header">科目</th>
+                        </tr>
                     </thead>
-                    <tbody id="schedule-table-body"></tbody>
+                    <tbody id="schedule-table-body" class="bg-white"></tbody>
                 </table>
             </div>
         </div>
     </div>
 
     <script>
+        // --- 1. 全螢幕與遮罩邏輯 ---
         function requestFullScreen() {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen().catch(() => {});
@@ -133,46 +144,113 @@
             const btn = document.getElementById('overlay-confirm-btn');
 
             if (document.fullscreenElement) {
-                text.innerHTML = "已進入全螢幕模式<br><span style='font-size:2rem; color:#94a3b8;'>按 ESC 鍵可退出並鎖定</span>";
+                text.innerHTML = "已進入全螢幕模式<br><span style='font-size:2.5rem; color:#94a3b8; display:block; margin-top:2rem;'>按 ESC 鍵可退出並重新鎖定</span>";
                 btn.classList.remove('hidden');
                 overlay.style.cursor = "default";
             } else {
-                window.location.reload();
+                window.location.reload(); // 退出時強制重新整理，重新鎖定
             }
         });
 
-        function hideOverlay(e) {
-            e.stopPropagation();
+        function hideOverlay(event) {
+            event.stopPropagation(); 
             document.getElementById('fullscreen-overlay').style.display = 'none';
-            document.getElementById('body-tag').style.overflow = 'auto';
+            document.getElementById('body-tag').style.overflow = 'auto'; 
         }
 
-        // 人數計算
+        // --- 2. 考程資料 ---
+        const DAY1_DATE_STR = "2026/04/01";
+        const DAY2_DATE_STR = "2026/04/02";
+        const SCHEDULE_DATA = [
+            { session: '第一節', time: '08:30–09:15', day1: { name: '自習', isExam: false }, day2: { name: '自習', isExam: false } },
+            { session: '第二節', time: '09:25–10:10', day1: { name: '國文', isExam: true }, day2: { name: '英文(含聽力)', isExam: true } },
+            { session: '第三節', time: '10:20–11:05', day1: { name: '自習', isExam: false }, day2: { name: '自習', isExam: false } },
+            { session: '第四節', time: '11:15–12:00', day1: { name: '生物', isExam: true }, day2: { name: '數學', isExam: true } },
+            { session: '午休',   time: '12:00–13:15', day1: { name: '午休及午餐', isExam: false }, day2: { name: '午休及午餐', isExam: false } },
+            { session: '第五節', time: '13:15–13:55', day1: { name: '自習', isExam: false }, day2: { name: '班際體育競賽', isExam: false } },
+            { session: '第六節', time: '14:05–14:55', day1: { name: '寫作測驗', isExam: true }, day2: { name: '班際體育競賽', isExam: false } },
+            { session: '第七節', time: '15:05–15:50', day1: { name: '社會', isExam: true }, day2: { name: '班際體育競賽', isExam: false } },
+        ];
+
+        let currentView = 'Day1';
+
+        // --- 3. 核心函數 ---
+        function switchDay(day) {
+            currentView = day;
+            const isDay1 = (day === 'Day1');
+            document.getElementById('btn-day1').className = isDay1 ? 'px-8 py-3 rounded-full font-bold bg-blue-600 text-white shadow-lg' : 'px-8 py-3 rounded-full font-bold bg-gray-200 text-gray-700';
+            document.getElementById('btn-day2').className = !isDay1 ? 'px-8 py-3 rounded-full font-bold bg-blue-600 text-white shadow-lg' : 'px-8 py-3 rounded-full font-bold bg-gray-200 text-gray-700';
+            document.getElementById('exam-day-header').textContent = isDay1 ? '04/01（三）科目' : '04/02（四）科目';
+            renderTable();
+        }
+
+        function renderTable() {
+            const body = document.getElementById('schedule-table-body');
+            body.innerHTML = '';
+            const now = new Date();
+            const todayStr = now.toLocaleDateString('zh-TW', {year:'numeric', month:'2-digit', day:'2-digit'}).replace(/\//g, '/');
+            const nowMin = now.getHours() * 60 + now.getMinutes();
+
+            SCHEDULE_DATA.forEach(item => {
+                const row = document.createElement('tr');
+                const [startStr, endStr] = item.time.split('–');
+                const startMin = parseInt(startStr.split(':')[0]) * 60 + parseInt(startStr.split(':')[1]);
+                const endMin = parseInt(endStr.split(':')[0]) * 60 + parseInt(endStr.split(':')[1]);
+                const isCorrectDay = (todayStr === DAY1_DATE_STR && currentView === 'Day1') || (todayStr === DAY2_DATE_STR && currentView === 'Day2');
+                
+                if (isCorrectDay && nowMin >= startMin && nowMin < endMin) {
+                    row.className = 'bg-yellow-100 ring-2 ring-yellow-400 ring-inset font-bold';
+                }
+                
+                const dayData = (currentView === 'Day1') ? item.day1 : item.day2;
+                const subjectColor = dayData.isExam ? 'text-red-600' : 'text-green-600';
+                row.innerHTML = `<td>${item.session}</td><td>${item.time}</td><td><span class="subject-name ${subjectColor}">${dayData.name}</span></td>`;
+                body.appendChild(row);
+            });
+        }
+
+        function updateClock() {
+            const now = new Date();
+            const todayStr = now.toLocaleDateString('zh-TW', {year:'numeric', month:'2-digit', day:'2-digit'}).replace(/\//g, '/');
+            document.getElementById('current-date').textContent = now.toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'long' });
+            document.getElementById('current-time').textContent = now.toLocaleTimeString('zh-TW', { hour12: false });
+            
+            let statusText = (todayStr !== DAY1_DATE_STR && todayStr !== DAY2_DATE_STR) ? "📅 目前非段考日期" : "今日考程尚未開始";
+            let statusClass = "text-gray-500";
+
+            if (todayStr === DAY1_DATE_STR || todayStr === DAY2_DATE_STR) {
+                const nowMin = now.getHours() * 60 + now.getMinutes();
+                SCHEDULE_DATA.forEach(item => {
+                    const [startStr, endStr] = item.time.split('–');
+                    const startMin = parseInt(startStr.split(':')[0]) * 60 + parseInt(startStr.split(':')[1]);
+                    const endMin = parseInt(endStr.split(':')[0]) * 60 + parseInt(endStr.split(':')[1]);
+                    const dayData = (todayStr === DAY1_DATE_STR) ? item.day1 : item.day2;
+                    if (nowMin >= startMin && nowMin < endMin) {
+                        statusText = `正在進行：${dayData.name}`;
+                        statusClass = dayData.isExam ? "text-red-600 animate-pulse" : "text-blue-700";
+                    }
+                });
+            }
+            const output = document.getElementById('current-subject-output');
+            output.textContent = statusText;
+            output.className = `text-2xl sm:text-4xl font-bold ${statusClass}`;
+        }
+
         function updateAttendance() {
             const total = parseInt(document.getElementById('total-students').value) || 0;
             const present = parseInt(document.getElementById('present-students').value) || 0;
             document.getElementById('absent-students').textContent = Math.max(0, total - present);
         }
 
-        // 時間與考程 (簡化版邏輯)
-        function updateClock() {
+        // --- 4. 初始化 ---
+        window.onload = () => {
             const now = new Date();
-            document.getElementById('current-date').textContent = now.toLocaleDateString('zh-TW', { year:'numeric', month:'2-digit', day:'2-digit', weekday:'long' });
-            document.getElementById('current-time').textContent = now.toLocaleTimeString('zh-TW', { hour12: false });
-        }
-
-        // 初始執行
-        setInterval(updateClock, 1000);
-        updateClock();
-        updateAttendance();
-
-        // 科目切換 (Demo 用)
-        function switchDay(day) {
-            const isDay1 = day === 'Day1';
-            document.getElementById('btn-day1').className = isDay1 ? 'px-8 py-3 rounded-full font-bold bg-blue-600 text-white' : 'px-8 py-3 rounded-full font-bold bg-gray-200 text-gray-700';
-            document.getElementById('btn-day2').className = !isDay1 ? 'px-8 py-3 rounded-full font-bold bg-blue-600 text-white' : 'px-8 py-3 rounded-full font-bold bg-gray-200 text-gray-700';
-            document.getElementById('exam-day-header').textContent = isDay1 ? '04/01 科目' : '04/02 科目';
-        }
+            const todayStr = now.toLocaleDateString('zh-TW', {year:'numeric', month:'2-digit', day:'2-digit'}).replace(/\//g, '/');
+            if (todayStr === DAY2_DATE_STR) switchDay('Day2'); else switchDay('Day1');
+            setInterval(updateClock, 1000);
+            updateClock(); 
+            updateAttendance();
+        };
     </script>
 </body>
 </html>
