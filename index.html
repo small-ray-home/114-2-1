@@ -25,26 +25,41 @@
             background-size: 20px 20px;
             background-position: 0 0, 10px 10px;
             zoom: 95%;
-            overflow: hidden; /* 預設禁止滾動，直到點擊確定 */
+            overflow: hidden; /* 預設禁止滾動 */
         }
 
-        /* 黑色遮罩：強制全螢幕覆蓋 */
+        /* --- 1920*1080 固定解析度遮罩邏輯 --- */
         #fullscreen-overlay {
             position: fixed;
             top: 0;
             left: 0;
-            right: 0;
-            bottom: 0;
             width: 100vw;
             height: 100vh;
-            background-color: #0f172a; /* 更深邃的藍黑色 */
-            color: white;
+            background-color: #020617; /* 最深色背景 */
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 99999;
             cursor: pointer;
+            overflow: hidden;
+        }
+
+        /* 固定 16:9 的內容區域 */
+        #overlay-content-area {
+            width: 1920px;
+            height: 1080px;
+            background-color: #0f172a; /* 內容區域的深色背景 */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #1e293b; /* 可選：加個邊框區分 1920 區域 */
+            box-shadow: 0 0 100px rgba(0,0,0,0.8);
+            
+            /* RWD 防呆：當螢幕小於 1920*1080 時自動縮放 */
+            max-width: 100vw;
+            max-height: 100vh;
+            aspect-ratio: 1920 / 1080;
         }
 
         .dashboard-container { max-width: 1100px; width: 100%; }
@@ -57,12 +72,12 @@
 <body id="body-tag">
 
     <div id="fullscreen-overlay" onclick="requestFullScreen()">
-        <div class="text-center p-6">
-            <h2 id="overlay-text" class="text-3xl font-bold mb-10 leading-relaxed">
+        <div id="overlay-content-area" class="p-10">
+            <h2 id="overlay-text" class="text-6xl font-black mb-20 leading-tight text-center">
                 請點擊畫面進入全螢幕模式
             </h2>
             <button id="overlay-confirm-btn" onclick="hideOverlay(event)" 
-                    class="hidden px-16 py-5 bg-blue-600 text-white rounded-full font-black text-2xl hover:bg-blue-700 transition-all shadow-2xl active:scale-95">
+                    class="hidden px-24 py-8 bg-blue-600 text-white rounded-full font-black text-4xl hover:bg-blue-700 transition-all shadow-2xl active:scale-95">
                 確 定
             </button>
         </div>
@@ -129,7 +144,7 @@
     </div>
 
     <script>
-        // --- 1. 全螢幕遮罩邏輯修復 ---
+        // --- 全螢幕遮罩邏輯修復 ---
         function requestFullScreen() {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen().catch(err => {
@@ -145,7 +160,7 @@
 
             if (document.fullscreenElement) {
                 // 進入全螢幕後：更換文字，顯現確定按鈕
-                text.innerHTML = "已進入全螢幕模式<br><span class='text-xl text-gray-400 mt-4 block'>按 ESC 鍵可退出並重新鎖定</span>";
+                text.innerHTML = "已進入全螢幕模式<br><span class='text-4xl text-gray-400 mt-10 block'>按 ESC 鍵可退出並重新鎖定</span>";
                 btn.classList.remove('hidden');
                 overlay.style.cursor = "default";
             } else {
@@ -162,7 +177,7 @@
             document.getElementById('body-tag').style.overflow = 'auto'; // 允許滾動內容
         }
 
-        // --- 2. 考程與計時邏輯 ---
+        // --- 其餘考程與計時邏輯保持不變 ---
         function updateAttendance() {
             const totalInput = document.getElementById('total-students');
             const presentInput = document.getElementById('present-students');
