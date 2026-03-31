@@ -23,7 +23,7 @@
 
         .main-container {
             width: 100%;
-            max-width: 1700px;
+            max-width: 1750px;
             height: 94vh;
             display: grid;
             grid-template-columns: 1fr 1.4fr;
@@ -38,11 +38,9 @@
             padding: 2.5rem; 
             box-shadow: 0 15px 35px rgba(0,0,0,0.1); 
             height: 100%;
-            display: flex;
-            flex-direction: column;
         }
         
-        /* 時間字體：使用等寬字體確保秒數跳動時文字不抖動 */
+        /* 時間字體設定 */
         #current-time {
             font-family: 'Inter', monospace;
             font-variant-numeric: tabular-nums;
@@ -61,66 +59,75 @@
             flex: 1; padding: 1.2rem; border-radius: 1.5rem;
             font-size: 2rem; font-weight: 900; transition: all 0.3s ease;
         }
+
+        /* 左下卡片的內容容器，用於動態分配高度 */
+        .status-content-wrapper {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
     </style>
 </head>
 <body>
 
     <div id="fullscreen-overlay" onclick="requestFullScreen()">
         <div class="text-center text-white">
-            <h2 class="text-7xl font-black mb-10">點擊開始監考</h2>
+            <h2 class="text-7xl font-black mb-10">點擊進入全螢幕 使用esc退出</h2>
             <button id="overlay-confirm-btn" onclick="hideOverlay(event)" 
                     class="hidden px-20 py-8 bg-blue-600 rounded-full text-4xl font-black">確 定</button>
         </div>
     </div>
 
     <div class="main-container">
-        <div class="flex flex-col gap-8">
-            <div class="card justify-center items-center text-center shrink-0" style="height: 35%;">
-                <h1 class="text-4xl font-black text-blue-900 mb-4">114學年度 第一次段考</h1>
-                <div id="current-date" class="text-3xl font-bold text-gray-500 mb-2"></div>
+        <div class="flex flex-col gap-8 h-full">
+            <div class="card flex flex-col justify-center items-center text-center shrink-0" style="height: 35%;">
+                <h1 class="text-4xl font-black text-blue-900 mb-2">114學年度 第一次段考</h1>
+                <div id="current-date" class="text-3xl font-bold text-gray-500 mb-1"></div>
                 <div id="current-time" class="text-[8rem] font-black text-blue-600 tracking-tighter"></div>
             </div>
 
-            <div class="card flex-1 justify-between">
-                <div class="grid grid-cols-3 gap-6 text-center">
-                    <div>
-                        <p class="text-2xl font-bold text-gray-400 mb-2">應到</p>
-                        <input type="number" id="total-students" value="30" oninput="updateAttendance()" 
-                               class="w-full text-8xl font-black text-center">
+            <div class="card flex-1">
+                <div class="status-content-wrapper">
+                    <div id="section-attendance" class="flex flex-col justify-center border-b-2 border-gray-50 transition-all duration-500">
+                        <div class="grid grid-cols-3 gap-6 text-center">
+                            <div>
+                                <p class="text-2xl font-bold text-gray-400 mb-1">應到</p>
+                                <input type="number" id="total-students" value="30" oninput="updateAttendance()" class="w-full text-7xl font-black text-center">
+                            </div>
+                            <div>
+                                <p class="text-2xl font-bold text-gray-400 mb-1">實到</p>
+                                <input type="number" id="present-students" value="30" oninput="updateAttendance()" class="w-full text-7xl font-black text-center text-green-600">
+                            </div>
+                            <div>
+                                <p class="text-2xl font-bold text-gray-400 mb-1">缺席</p>
+                                <div id="absent-students" class="text-7xl font-black text-red-600">0</div>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <p class="text-2xl font-bold text-gray-400 mb-2">實到</p>
-                        <input type="number" id="present-students" value="30" oninput="updateAttendance()" 
-                               class="w-full text-8xl font-black text-center text-green-600">
-                    </div>
-                    <div>
-                        <p class="text-2xl font-bold text-gray-400 mb-2">缺席</p>
-                        <div id="absent-students" class="text-8xl font-black text-red-600">0</div>
-                    </div>
-                </div>
 
-                <div id="absent-info-section" class="mt-6 p-6 bg-red-50 rounded-3xl hidden">
-                    <div class="grid grid-cols-2 gap-8">
-                        <div class="flex flex-col gap-2">
-                            <span class="text-3xl font-black text-red-600">病假座號：</span>
-                            <input type="text" placeholder="例：5, 12" class="w-full text-4xl font-bold p-2 border-red-200">
-                        </div>
-                        <div class="flex flex-col gap-2">
-                            <span class="text-3xl font-black text-blue-600">事假座號：</span>
-                            <input type="text" placeholder="例：3, 21" class="w-full text-4xl font-bold p-2 border-blue-200">
+                    <div id="absent-info-section" class="hidden flex-col justify-center bg-red-50 rounded-3xl px-8 my-2 transition-all duration-500 overflow-hidden">
+                        <div class="grid grid-cols-2 gap-12">
+                            <div class="flex flex-col gap-2">
+                                <span class="text-3xl font-black text-red-600">病假座號：</span>
+                                <input type="text" placeholder="例：5, 12" class="w-full text-4xl font-bold p-2 border-red-200">
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <span class="text-3xl font-black text-blue-600">事假座號：</span>
+                                <input type="text" placeholder="例：3, 21" class="w-full text-4xl font-bold p-2 border-blue-200">
+                            </div>
                         </div>
                     </div>
-                </div>
-                
-                <div class="text-center mt-4 pt-4 border-t-2 border-gray-50">
-                    <p class="text-2xl font-bold text-gray-400">當前狀態</p>
-                    <div id="current-subject-output" class="text-6xl font-black text-gray-800 mt-2"></div>
+
+                    <div id="section-status" class="flex flex-col justify-center text-center transition-all duration-500">
+                        <p class="text-2xl font-bold text-gray-400">當前狀態</p>
+                        <div id="current-subject-output" class="text-7xl font-black text-gray-800 mt-2"></div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="card">
-            <div class="flex gap-6 mb-8">
+        <div class="card flex flex-col">
+            <div class="flex gap-6 mb-8 shrink-0">
                 <button id="btn-day1" onclick="switchDay('Day1')" class="day-btn">第一天 (4/1)</button>
                 <button id="btn-day2" onclick="switchDay('Day2')" class="day-btn">第二天 (4/2)</button>
             </div>
@@ -140,22 +147,12 @@
     </div>
 
     <script>
-        function requestFullScreen() {
-            document.documentElement.requestFullscreen().catch(() => {});
-        }
-
+        function requestFullScreen() { document.documentElement.requestFullscreen().catch(() => {}); }
         document.addEventListener('fullscreenchange', () => {
-            if (document.fullscreenElement) {
-                document.getElementById('overlay-confirm-btn').classList.remove('hidden');
-            } else {
-                window.location.reload(); 
-            }
+            if (document.fullscreenElement) document.getElementById('overlay-confirm-btn').classList.remove('hidden');
+            else window.location.reload(); 
         });
-
-        function hideOverlay(event) {
-            event.stopPropagation(); 
-            document.getElementById('fullscreen-overlay').style.display = 'none';
-        }
+        function hideOverlay(event) { event.stopPropagation(); document.getElementById('fullscreen-overlay').style.display = 'none'; }
 
         const DAY1_DATE_STR = "2026/04/01";
         const DAY2_DATE_STR = "2026/04/02";
@@ -175,10 +172,8 @@
         function switchDay(day) {
             currentView = day;
             const isD1 = day === 'Day1';
-            const b1 = document.getElementById('btn-day1');
-            const b2 = document.getElementById('btn-day2');
-            b1.className = isD1 ? 'day-btn bg-blue-600 text-white shadow-xl' : 'day-btn bg-gray-100 text-gray-400 hover:bg-gray-200';
-            b2.className = !isD1 ? 'day-btn bg-blue-600 text-white shadow-xl' : 'day-btn bg-gray-100 text-gray-400 hover:bg-gray-200';
+            document.getElementById('btn-day1').className = isD1 ? 'day-btn bg-blue-600 text-white shadow-xl' : 'day-btn bg-gray-100 text-gray-400 hover:bg-gray-200';
+            document.getElementById('btn-day2').className = !isD1 ? 'day-btn bg-blue-600 text-white shadow-xl' : 'day-btn bg-gray-100 text-gray-400 hover:bg-gray-200';
             renderTable();
         }
 
@@ -198,8 +193,8 @@
                     row.className = 'highlight-row';
                 }
                 const subject = currentView === 'Day1' ? item.d1 : item.d2;
-                const isExamSubject = item.isExam && !subject.includes('競賽') && !subject.includes('自習');
-                row.innerHTML = `<td>${item.s}</td><td class="font-mono font-bold">${item.t}</td><td class="${isExamSubject ? 'text-red-600' : 'text-gray-700'} font-black">${subject}</td>`;
+                const isExamSub = item.isExam && !subject.includes('競賽') && !subject.includes('自習');
+                row.innerHTML = `<td>${item.s}</td><td class="font-mono font-bold">${item.t}</td><td class="${isExamSub ? 'text-red-600' : 'text-gray-700'} font-black">${subject}</td>`;
                 body.appendChild(row);
             });
         }
@@ -207,7 +202,6 @@
         function updateClock() {
             const now = new Date();
             document.getElementById('current-date').textContent = now.toLocaleDateString('zh-TW', { month: '2-digit', day: '2-digit', weekday: 'long' });
-            // 顯示秒數
             document.getElementById('current-time').textContent = now.toLocaleTimeString('zh-TW', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
             
             const todayStr = now.toLocaleDateString('zh-TW', {year:'numeric', month:'2-digit', day:'2-digit'}).replace(/\//g, '/');
@@ -227,7 +221,23 @@
             const present = parseInt(document.getElementById('present-students').value) || 0;
             const absent = Math.max(0, total - present);
             document.getElementById('absent-students').textContent = absent;
-            document.getElementById('absent-info-section').style.display = absent > 0 ? 'block' : 'none';
+
+            const infoSec = document.getElementById('absent-info-section');
+            const attenSec = document.getElementById('section-attendance');
+            const statusSec = document.getElementById('section-status');
+
+            if (absent > 0) {
+                infoSec.style.display = 'flex';
+                // 有缺席：三格分配 33%, 33%, 34%
+                attenSec.style.height = '33%';
+                infoSec.style.height = '33%';
+                statusSec.style.height = '34%';
+            } else {
+                infoSec.style.display = 'none';
+                // 無缺席：兩格分配 50%, 50%
+                attenSec.style.height = '50%';
+                statusSec.style.height = '50%';
+            }
         }
 
         window.onload = () => {
