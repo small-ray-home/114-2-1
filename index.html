@@ -126,8 +126,8 @@
 
         <div class="card flex flex-col">
             <div class="flex gap-6 mb-8 shrink-0">
-                <button id="btn-day1" onclick="switchDay('Day1')" class="day-btn">第一天 (5/28)</button>
-                <button id="btn-day2" onclick="switchDay('Day2')" class="day-btn">第二天 (5/29)</button>
+                <button id="btn-day1" onclick="switchDay('Day1')" class="day-btn">第一天 (5/19)</button>
+                <button id="btn-day2" onclick="switchDay('Day2')" class="day-btn">第二天 (5/20)</button>
             </div>
             <div class="flex-1 overflow-hidden">
                 <table class="exam-table">
@@ -155,7 +155,6 @@
         const DAY1_DATE_STR = "2026/05/28";
         const DAY2_DATE_STR = "2026/05/29";
         
-        // 修改後的資料結構：t1 代表第一天時間，t2 代表第二天時間
         const SCHEDULE_DATA = [
             { s: '第一節', t1: '08:30–09:15', t2: '08:30–09:15', d1: '生物', d2: '自習', isExam: true },
             { s: '第二節', t1: '09:25–10:10', t2: '09:25–10:10', d1: '英文含英聽', d2: '社會(27)', isExam: true },
