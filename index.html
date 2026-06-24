@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-TW" style="overflow: hidden;">
+<html lang="zh-TW" style="overflow: hidden; background-color: #a4c9e4;">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -10,7 +10,8 @@
         
         body {
             font-family: 'Inter', 'Noto Sans TC', sans-serif;
-            margin: 0; padding: 0; height: 100vh; width: 100vw;
+            margin: 0; padding: 0; 
+            height: 100vh; width: 100vw;
             background-color: #a4c9e4;
             overflow: hidden !important;
             display: flex; justify-content: center; align-items: center;
@@ -21,15 +22,18 @@
             background-color: #020617; display: flex; justify-content: center; align-items: center; z-index: 99999;
         }
 
+        /* 調整核心：設定標準 1920x1080 畫布，並等比例縮放至 80% */
         .main-container {
-            width: 100%;
-            max-width: 1750px;
-            height: 94vh;
+            width: 1920px;
+            height: 1080px;
             display: grid;
             grid-template-columns: 1fr 1.4fr;
             gap: 2.5rem;
-            padding: 0 2.5rem;
+            padding: 2.5rem;
             box-sizing: border-box;
+            transform: scale(0.8);
+            transform-origin: center center;
+            flex-shrink: 0;
         }
 
         .card { 
