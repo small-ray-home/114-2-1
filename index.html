@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>青埔國中 學力檢測即時儀表板</title>
+    <title>青埔國中一下第三次段考即時儀表板</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght=900&family=Noto+Sans+TC:wght=900&display=swap');
@@ -79,7 +79,7 @@
     <div class="main-container">
         <div class="flex flex-col gap-8 h-full">
             <div class="card flex flex-col justify-center items-center text-center shrink-0" style="height: 35%;">
-                <h1 class="text-4xl font-black text-blue-900 mb-2">114學年度 七年級學力檢測</h1>
+                <h1 class="text-4xl font-black text-blue-900 mb-2">114學年度一下第三次段考即時儀表板</h1>
                 <div id="current-date" class="text-3xl font-bold text-gray-500 mb-1"></div>
                 <div id="current-time" class="text-[8rem] font-black text-blue-600 tracking-tighter"></div>
             </div>
@@ -126,8 +126,8 @@
 
         <div class="card flex flex-col">
             <div class="flex gap-6 mb-8 shrink-0">
-                <button id="btn-day1" onclick="switchDay('Day1')" class="day-btn">第一天 (5/28)</button>
-                <button id="btn-day2" onclick="switchDay('Day2')" class="day-btn"> </button>
+                <button id="btn-day1" onclick="switchDay('Day1')" class="day-btn">第一天 (6/29)</button>
+                <button id="btn-day2" onclick="switchDay('Day2')" class="day-btn">第二天 (6/30)</button>
             </div>
             <div class="flex-1 overflow-hidden">
                 <table class="exam-table">
@@ -152,18 +152,18 @@
         });
         function hideOverlay(event) { event.stopPropagation(); document.getElementById('fullscreen-overlay').style.display = 'none'; }
 
-        const DAY1_DATE_STR = "2026/05/28";
-        const DAY2_DATE_STR = "2026/05/29";
+        const DAY1_DATE_STR = "2026/06/29";
+        const DAY2_DATE_STR = "2026/06/30";
         
         const SCHEDULE_DATA = [
-            { s: '第一節', t1: '08:30–09:15', t2: '08:30–09:15', d1: '生物', d2: '自習', isExam: true },
-            { s: '第二節', t1: '09:25–10:10', t2: '09:25–10:10', d1: '英文含英聽', d2: '社會(27)', isExam: true },
-            { s: '第三節', t1: '10:20–11:05', t2: '10:20–11:05', d1: '數學', d2: '自習', isExam: true },
-            { s: '第四節', t1: '11:15–12:00', t2: '11:15–12:00', d1: '國文', d2: '英語(02)', isExam: true },
-            { s: '午休',   t1: '12:00–13:15', t2: '12:00–13:15', d1: '', d2: '午餐午休', isExam: false },
-            { s: '第五節', t1: '13:15–13:55', t2: '13:15–14:00', d1: '', d2: '依課表', isExam: false },
-            { s: '第六節', t1: '14:05–14:55', t2: '14:10–14:55', d1: '', d2: '依課表', isExam: true },
-            { s: '第七節', t1: '15:05–15:50', t2: '15:05–15:50', d1: '', d2: '依課表', isExam: true }
+            { s: '第一節', t1: '08:30–09:15', t2: '08:30–09:15', d1: '自習', d2: '自習', isExam: true },
+            { s: '第二節', t1: '09:25–10:10', t2: '09:25–10:10', d1: '數學(03)', d2: '社會(27)', isExam: true },
+            { s: '第三節', t1: '10:20–11:05', t2: '10:20–11:05', d1: '自習', d2: '自習', isExam: true },
+            { s: '第四節', t1: '11:15–12:00', t2: '11:15–12:00', d1: '國文(01)', d2: '英語(02)', isExam: true },
+            { s: '午休',   t1: '12:00–13:15', t2: '12:00–13:15', d1: '午餐午休', d2: '午餐午休', isExam: false },
+            { s: '第五節', t1: '13:15–13:55', t2: '13:15–14:00', d1: '自習', d2: '大掃除', isExam: false },
+            { s: '第六節', t1: '14:05–14:55', t2: '14:10–14:55', d1: '自習', d2: '大掃除', isExam: true },
+            { s: '第七節', t1: '15:05–15:50', t2: '15:05–15:50', d1: '生物(25)', d2: '結業式', isExam: true }
         ];
 
         let currentView = 'Day1';
